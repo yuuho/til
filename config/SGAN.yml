@@ -1,0 +1,106 @@
+# you@host:til/program$ hellflame train ../config/SGAN.yaml --force-clear -g 1
+# SGAN
+
+env: {} # hellflame automatically generate
+
+# 環境
+environ:
+    #machine: somemachine
+    #gpu: [1]
+    #path:
+    #    MLPROG: /path/to/til/program/
+    exp_name: til/gans/sgan
+
+trainer:
+    name: Trainer_for_develop
+    params: {}
+
+################################################################################
+
+# log supervised conditional gan
+logger:
+    -   name: progress_bar
+        params: {}
+    -   name: loss_all
+        params:
+            freq: 10
+    -   name: generated_images
+        params:
+            scale: iter
+            freq: 500
+            save_freq: 1000
+#     -   name: pggan/multiview/times_model
+#         params:
+#             scale: hour
+#             freq: 300
+#             save_freq: 10
+#             latest_only: True
+
+# データ系
+dataset:
+    train:
+        name: FFHQ
+        params: &dataset_base
+            tfrecord_path: tf_ffhq/ffhq/ffhq-r07.tfrecords
+            temp_prefix: ffhq_128
+            train_rate: 0.9
+            mode: train
+    val:
+        name: FFHQ
+        params:
+            <<: *dataset_base
+            mode: val
+
+################################################################################
+
+# データローダー
+loader:
+    train:
+        name: SimpleDataLoader
+        params: &loader_base
+            num_workers: 6
+            pin_memory: True
+            shuffle: True
+            batch_size: 64
+    val:
+        name: SimpleDataLoader
+        params:
+            <<: *loader_base
+            shuffle: False
+
+# モデル系
+model:
+    generator:
+        name: SimpleGenerator
+        params: {}
+    discriminator:
+        name: SigmoidDiscriminator
+        params: {}
+
+# ロス関数
+loss:
+    generator:
+        name: SGAN_G
+        params: {}
+    discriminator:
+        name: SGAN_D
+        params: {}
+    gradientpenalty:
+        name: GP_none
+        params: {}
+
+
+# 使用する最適化手法
+optimizer:
+    generator:
+        name: Adam
+        params:
+            lr: 0.0001
+            betas: [0.5, 0.999]
+            eps:  0.0000001
+    discriminator:
+        name: Adam
+        params:
+            lr: 0.0001
+            betas: [0.5, 0.999]
+            eps:  0.0000001
